@@ -4,7 +4,7 @@ import { RunnableValidationChains } from 'express-validator/src/middlewares/sche
 // hàm validate nhận vào check schema và biến nó thành 1 cái middleWare
 export const validate = (validation: RunnableValidationChains<ValidationChain>) => {
   return async (req: Request, res: Response, next: NextFunction) => {
-    await validation.run(req)
+    await validation.run(req) // dữ liệu sẽ đi qua từng checkSchema và lưu lỗi vào request
     const errors = validationResult(req)
     if (errors.isEmpty()) {
       return next()
