@@ -40,7 +40,7 @@ export const registerValidator = validate(
           if (isExist) {
             throw new Error(`email already exists`)
           }
-          return true
+          return true // hợp lệ
         }
       }
     },
@@ -87,10 +87,16 @@ export const registerValidator = validate(
       errorMessage: `confirm_password mus be at least 8 characters long and contain at least 1 lowercase letter, 1 uppercase letter, 1 number, and 1 symbol`,
       custom: {
         options: (value, { req }) => {
+          //value là confirm-password vởi vì custom đang nằm trong
+          // confirm-password
+          // req là request hiện tại đang được gửi lên để register
           if (value !== req.body.password) {
             throw new Error(`confirm_password does not match password`)
+            // lỗi này sẽ được ném ra và nằm trong request
+            // sau đó nó sẽ được lấy và in ra bởi validationResult của hàm validate
           }
           return true
+          //k đc thiếu return true, nếu k thì k bao giờ pass qua vòng này
         }
       }
     },

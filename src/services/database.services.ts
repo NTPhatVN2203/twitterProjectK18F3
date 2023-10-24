@@ -4,6 +4,10 @@ import User from '~/models/schemas/User.schema'
 config()
 const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@tweetprojectk18f3.kjqivvl.mongodb.net/?retryWrites=true&w=majority`
 
+//đây là 1 database lớn của mình (server)
+//trong đây chứa các collection khác nhau: users,...
+//chứa các thao tác giúp link với thằng data (mongoDB)
+// với thao tác lấy collection(users,...)
 class DatabaseService {
   private client: MongoClient
   private db: Db
@@ -27,5 +31,6 @@ class DatabaseService {
   }
 }
 
-const databaseService = new DatabaseService()
+const databaseService = new DatabaseService() //tạo ra 1 object databaseService
+// thằng này đã link vs mongoDB và có method lấy collection users,...
 export default databaseService

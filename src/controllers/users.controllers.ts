@@ -22,6 +22,13 @@ export const loginController = (req: Request, res: Response) => {
     result: []
   })
 }
+// any trong mô tả request chính là resBody
+// RegisterReqBody chính là 1 interface dùng để định nghĩa lại thằng
+// reqBody của register
+
+//giờ thì ta đã thấy body là RegisterReqBody
+//việc này sẽ giúp code nhắc ta là trong body có gì
+//và ta biết đã biết chắc body là RegisterReqBody
 export const registerController = async (req: Request<ParamsDictionary, any, RegisterReqBody>, res: Response) => {
   try {
     const result = await usersService.register(req.body)
