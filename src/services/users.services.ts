@@ -24,6 +24,10 @@ class UsersService {
     })
   }
 
+  private signAccessTokenAndRefreshToken(user_id: string) {
+    return Promise.all([this.signAccessToken(user_id), this.signRefreshToken(user_id)])
+  }
+
   async register(payload: RegisterReqBody) {
     //register nhận vào 1 payload và payload được định nghĩa là RegisterReqBody
     //payload là những gì người dùng gửi lên
@@ -39,10 +43,7 @@ class UsersService {
       })
     )
     const user_id = result.insertedId.toString()
-    const [access_token, refresh_token] = await Promise.all([
-      this.signAccessToken(user_id),
-      this.signRefreshToken(user_id)
-    ])
+    const [access_token, refresh_token] = await this.signAccessTokenAndRefreshToken(user_id)
     return { access_token, refresh_token }
   }
 
@@ -54,6 +55,11 @@ class UsersService {
     // nếu tồn tại user -> object user -> chuyển sang boolean -> true
     // nếu k có user -> null -> chuyển sang boolean -> false
     return Boolean(user)
+  }
+
+  async login(user_id: string) {
+    const [access_token, refresh_token] = await this.signAccessTokenAndRefreshToken(user_id)
+    return { access_token, refresh_token }
   }
 }
 const usersService = new UsersService()

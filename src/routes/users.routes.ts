@@ -1,10 +1,11 @@
 import { Router } from 'express'
 import { loginController, registerController } from '~/controllers/users.controllers'
 import { loginValidator, registerValidator } from '~/middlewares/users.middlewares'
+import { wrapAsync } from '~/utils/handler'
 const usersRouter = Router()
 
-usersRouter.get('/login', loginValidator, loginController)
-
+usersRouter.get('/login', loginValidator, wrapAsync(loginController))
+usersRouter.post('/register', registerValidator, wrapAsync(registerController))
 /*
 Description: Register new user
 Path: /register
@@ -17,6 +18,5 @@ body: {
     date_of_birth: string theo chuẩn ISO 8601
 }
 */
-usersRouter.post('/register', registerValidator, registerController)
 
 export default usersRouter

@@ -1,25 +1,19 @@
-import { Request, Response } from 'express'
+import { NextFunction, Request, Response } from 'express'
 import User from '~/models/schemas/User.schema'
 import databaseService from '~/services/database.services'
 import usersService from '~/services/users.services'
 import { ParamsDictionary } from 'express-serve-static-core'
 import { RegisterReqBody } from '~/models/requests/User.requests'
 
-export const loginController = (req: Request, res: Response) => {
-  const { email, password } = req.body
-  if (email === 'test@gmail.com' && password === '123456') {
-    return res.json({
-      message: 'login successfully',
-      result: [
-        { name: 'Diep', yob: 1999 },
-        { name: 'Phat', yob: 2004 },
-        { name: 'Dang', yob: 2004 }
-      ]
-    })
-  }
-  res.status(400).json({
-    message: 'login failed',
-    result: []
+export const loginController = async (req: Request, res: Response) => {
+  //nếu nó vào tới đây, tức là nó đã đăng nhập thành công
+  const { user }: any = req
+  const user_id = user._id //nó là objectID
+  //server phải tạo ra access và refresh token để đưa cho client
+  const result = await usersService.login(user_id.toString())
+  return res.json({
+    message: 'login successfully',
+    result
   })
 }
 // any trong mô tả request chính là resBody
@@ -30,17 +24,9 @@ export const loginController = (req: Request, res: Response) => {
 //việc này sẽ giúp code nhắc ta là trong body có gì
 //và ta biết đã biết chắc body là RegisterReqBody
 export const registerController = async (req: Request<ParamsDictionary, any, RegisterReqBody>, res: Response) => {
-  try {
-    const result = await usersService.register(req.body)
-
-    return res.json({
-      message: 'register successfully',
-      result
-    })
-  } catch (error) {
-    res.status(400).json({
-      message: 'register failed',
-      error
-    })
-  }
+  const result = await usersService.register(req.body)
+  return res.json({
+    message: 'register successfully',
+    result
+  })
 }
