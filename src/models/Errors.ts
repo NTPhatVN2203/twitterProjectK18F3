@@ -4,6 +4,7 @@ import HTTP_STATUS from '~/constants/httpStatus'
 import { USERS_MESSAGES } from './message'
 
 //tạo kiểu lỗi giống thiết kế ban đâu
+//ErorsType đang định dạng cho thằng errors của EntityError
 type ErrorsType = Record<
   string,
   {
@@ -24,6 +25,8 @@ export class ErrorWithStatus {
   }
 }
 
+// EntityError là dành riêng cho thằng validation error
+// dùng để hiển thị lỗi có cấu trúc dễ nhìn và hiệu quả
 export class EntityError extends ErrorWithStatus {
   errors: ErrorsType
   //truyển message mặt định
@@ -32,3 +35,9 @@ export class EntityError extends ErrorWithStatus {
     this.errors = errors
   }
 }
+/*
+tạo ra EntityError như sau
+message: 
+status: 
+errors: 
+*/
