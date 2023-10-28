@@ -30,6 +30,10 @@ export const loginValidator = validate(
           })
           if (user === null) {
             throw new Error(USERS_MESSAGES.EMAIL_OR_PASSWORD_IS_INCORRECT)
+            //throw trong async k lỗi
+            // là bởi vì nó sẽ ném ra và thằng validate sẽ chụp
+            // và lưu lỗi vào request
+            // chứ throw chỗ này k liên quan tới thằng error handler
           }
           req.user = user
           return true

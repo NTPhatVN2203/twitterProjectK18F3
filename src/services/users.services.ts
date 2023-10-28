@@ -16,6 +16,10 @@ class UsersService {
     })
   }
 
+  //*** hàm signRefeshToken và signAccessToken(cả 2 đều return ra 1 promise)
+  //k dùng await là bởi vì đây
+  //là lúc tạo hàm, chỉ khi nào thằng nào sài thì nó mới await
+
   // hàm nhận vào user_id và bỏ vào payload để tạo refresh_token
   private signRefreshToken(user_id: string) {
     return signToken({
@@ -24,6 +28,9 @@ class UsersService {
     })
   }
 
+  //ở đây chúng ta k dùng async - await là bởi z
+  // bản chất của async - await là return 1 promise
+  // mà chúng ta đã tự return promise r
   private signAccessTokenAndRefreshToken(user_id: string) {
     return Promise.all([this.signAccessToken(user_id), this.signRefreshToken(user_id)])
   }

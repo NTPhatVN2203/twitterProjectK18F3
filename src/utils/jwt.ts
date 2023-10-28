@@ -28,6 +28,7 @@ export const signToken = ({
   //nên định nghĩa luôn là Promise trả về string
   return new Promise<string>((resolve, reject) => {
     jwt.sign(payload, privateKey, options, (err, token) => {
+      //sign là hàm tiện ích của jwt
       if (err) throw reject(err)
       resolve(token as string)
     })

@@ -11,6 +11,7 @@ export const loginController = async (req: Request, res: Response) => {
   const user_id = user._id //nó là objectID
   //server phải tạo ra access và refresh token để đưa cho client
   const result = await usersService.login(user_id.toString())
+  //hàm login nhận vào userID và trả về 1 access và refresh token
   return res.json({
     message: 'login successfully',
     result
