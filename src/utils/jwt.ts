@@ -1,4 +1,4 @@
-import jwt from 'jsonwebtoken'
+import jwt, { JwtPayload } from 'jsonwebtoken'
 import { config } from 'dotenv'
 
 //làm hàm nhận vào payload, privateKey và options
@@ -35,4 +35,19 @@ export const signToken = ({
   })
   //cái này là server nó phục vụ cho mình (người code) chứ k phải cho người dùng
   //để phải reject để mình bt nếu có lỗi thì còn fix
+}
+
+export const verifyToken = ({
+  token,
+  secretOnPublicKey = process.env.JWT_SECRET as string
+}: {
+  token: string
+  secretOnPublicKey?: string
+}) => {
+  return new Promise<jwt.JwtPayload>((resolve, reject) => {
+    jwt.verify(token, secretOnPublicKey, (err, decoded) => {
+      if (err) throw reject(err)
+      resolve(decoded as jwt.JwtPayload) //payload = decode
+    })
+  })
 }
