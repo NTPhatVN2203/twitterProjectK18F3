@@ -1,5 +1,6 @@
 import jwt, { JwtPayload } from 'jsonwebtoken'
 import { config } from 'dotenv'
+import { TokenPayLoad } from '~/models/requests/User.requests'
 
 //làm hàm nhận vào payload, privateKey và options
 // từ đó ký tên
@@ -44,10 +45,10 @@ export const verifyToken = ({
   token: string
   secretOnPublicKey?: string
 }) => {
-  return new Promise<jwt.JwtPayload>((resolve, reject) => {
+  return new Promise<TokenPayLoad>((resolve, reject) => {
     jwt.verify(token, secretOnPublicKey, (err, decoded) => {
       if (err) throw reject(err)
-      resolve(decoded as jwt.JwtPayload) //payload = decode
+      resolve(decoded as TokenPayLoad) //payload = decode
     })
   })
 }
