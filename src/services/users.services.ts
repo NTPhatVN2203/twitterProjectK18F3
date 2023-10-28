@@ -5,6 +5,8 @@ import { RegisterReqBody } from '~/models/requests/User.requests'
 import { hashPassword } from '~/utils/crypto'
 import { signToken } from '~/utils/jwt'
 import { TokenType } from '~/constants/enums'
+import RefreshToken from '~/models/schemas/RefreshToken.schema'
+import { ObjectId } from 'mongodb'
 
 //file này chứa các method để thực hiện trên collection users
 class UsersService {
@@ -51,6 +53,14 @@ class UsersService {
     )
     const user_id = result.insertedId.toString()
     const [access_token, refresh_token] = await this.signAccessTokenAndRefreshToken(user_id)
+    // lưu refresh_token vào database
+    await databaseService.refreshToken.insertOne(
+      new RefreshToken({
+        token: refresh_token,
+        user_id: new ObjectId(user_id) //bởi vì user_id trong RefreshToken là objectID
+        //nên phải chuyển từ string qua
+      })
+    )
     return { access_token, refresh_token }
   }
 
@@ -66,6 +76,14 @@ class UsersService {
 
   async login(user_id: string) {
     const [access_token, refresh_token] = await this.signAccessTokenAndRefreshToken(user_id)
+    // lưu refresh_token vào database
+    await databaseService.refreshToken.insertOne(
+      new RefreshToken({
+        token: refresh_token,
+        user_id: new ObjectId(user_id) //bởi vì user_id trong RefreshToken là objectID
+        //nên phải chuyển từ string qua
+      })
+    )
     return { access_token, refresh_token }
   }
 }
