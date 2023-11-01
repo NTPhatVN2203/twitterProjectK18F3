@@ -16,13 +16,13 @@ config()
 // thiếu privateKey hay Options thì nó sẽ dùng những thằng mặc định đã được gán
 export const signToken = ({
   payload,
-  privateKey = process.env.JWT_SECRET as string,
+  privateKey,
   //privateKey là password để được quyền tạo chữ ký jwt
   //privateKey để mặc định để khi nào cần kí thì lấy ra kí luôn
   options = { algorithm: 'HS256' }
 }: {
   payload: string | object | Buffer
-  privateKey?: string
+  privateKey: string
   options?: jwt.SignOptions
 }) => {
   //sau khi kí tên sẽ tạo ra token
@@ -39,13 +39,7 @@ export const signToken = ({
   //để phải reject để mình bt nếu có lỗi thì còn fix
 }
 
-export const verifyToken = ({
-  token,
-  secretOnPublicKey = process.env.JWT_SECRET as string
-}: {
-  token: string
-  secretOnPublicKey?: string
-}) => {
+export const verifyToken = ({ token, secretOnPublicKey }: { token: string; secretOnPublicKey: string }) => {
   return new Promise<TokenPayLoad>((resolve, reject) => {
     //method này sẽ verify token, nếu token hợp lệ thì nó sẽ trả về payload
     //nếu token không hợp lệ thì nó sẽ throw error

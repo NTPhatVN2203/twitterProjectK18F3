@@ -8,6 +8,8 @@ import { Request, Response, NextFunction } from 'express'
 import { checkSchema } from 'express-validator'
 import { JsonWebTokenError } from 'jsonwebtoken'
 import { capitalize } from 'lodash'
+import { ObjectId } from 'mongodb'
+import { UserVerifyStatus } from '~/constants/enums'
 import HTTP_STATUS from '~/constants/httpStatus'
 import { ErrorWithStatus } from '~/models/Errors'
 import { USERS_MESSAGES } from '~/models/message'
@@ -201,9 +203,6 @@ export const accessTokenValidator = validate(
     {
       Authorization: {
         trim: true,
-        notEmpty: {
-          errorMessage: USERS_MESSAGES.ACCESS_TOKEN_IS_REQUIRED
-        }, // kiểm tra xem client có gửi lên k
         custom: {
           options: async (value, { req }) => {
             const access_token = value.split(' ')[1] //split để loại bỏ thằng bearer
@@ -222,7 +221,10 @@ export const accessTokenValidator = validate(
             try {
               //nếu verify thành công thì
               //decoded_authorization sẽ là decoded payload
-              const decoded_authorization = await verifyToken({ token: access_token })
+              const decoded_authorization = await verifyToken({
+                token: access_token,
+                secretOnPublicKey: process.env.JWT_SECRET_ACCESS_TOKEN as string
+              })
               ;(req as Request).decoded_authorization = decoded_authorization
             } catch (err) {
               throw new ErrorWithStatus({
@@ -246,9 +248,6 @@ export const refreshTokenValidator = validate(
     {
       refresh_token: {
         trim: true,
-        notEmpty: {
-          errorMessage: USERS_MESSAGES.REFRESH_TOKEN_IS_REQUIRED
-        },
         custom: {
           options: async (value, { req }) => {
             //nếu verify thành công refresh_token
@@ -262,7 +261,7 @@ export const refreshTokenValidator = validate(
 
             try {
               const [decoded_refresh_token, refresh_token] = await Promise.all([
-                verifyToken({ token: value }), // trả ra decoded_refresh_token
+                verifyToken({ token: value, secretOnPublicKey: process.env.JWT_SECRET_REFRESH_TOKEN as string }), // trả ra decoded_refresh_token
                 databaseService.refreshToken.findOne({
                   // hàm findOne trả ra 1 promise || null nên phải dùng trong await
                   // kiểm trả database có tồn
@@ -278,6 +277,171 @@ export const refreshTokenValidator = validate(
                 })
               }
               ;(req as Request).decoded_refresh_token = decoded_refresh_token
+            } catch (err) {
+              //lỗi verify k thành công
+              if (err instanceof JsonWebTokenError) {
+                throw new ErrorWithStatus({
+                  message: capitalize((err as JsonWebTokenError).message),
+                  status: HTTP_STATUS.UNAUTHORIZED //401
+                })
+              }
+              // đây là ta throw lỗi mà ta bắt được từ việc k có trong database
+              throw err
+            }
+            return true
+          }
+        }
+      }
+    },
+    ['body']
+  )
+)
+
+export const emailVerifyTokenValidator = validate(
+  checkSchema(
+    {
+      email_verify_token: {
+        trim: true,
+        custom: {
+          options: async (value, { req }) => {
+            //nếu k truyền lên email_verify_token thì báo lỗi
+            if (!value) {
+              throw new ErrorWithStatus({
+                message: USERS_MESSAGES.EMAIL_VEIRY_TOKEN_IS_REQUIRED,
+                status: HTTP_STATUS.UNAUTHORIZED
+              })
+            }
+            try {
+              //verify email_verify_token để lấy decode
+              const decoded_email_verify_token = await verifyToken({
+                token: value,
+                secretOnPublicKey: process.env.JWT_SECRET_EMAIL_VERIFY_TOKEN as string
+              })
+              //lưu decoded_email_verify_token vào req
+              ;(req as Request).decoded_email_verify_token = decoded_email_verify_token
+              //láy user_id từ decoded_email_verify_token để tìm user sở hữu
+              const user_id = decoded_email_verify_token.user_id
+              const user = await databaseService.users.findOne({
+                _id: new ObjectId(user_id)
+              })
+              //nếu mà k có thì báo lỗi
+              if (!user) {
+                throw new ErrorWithStatus({
+                  message: USERS_MESSAGES.USER_NOT_FOUND,
+                  status: HTTP_STATUS.NOT_FOUND
+                })
+              }
+              req.user = user
+              //nếu có user thì xem thử user này có bị banned khong ?
+              if (user.verify === UserVerifyStatus.Banned) {
+                throw new ErrorWithStatus({
+                  message: USERS_MESSAGES.USER_BANNED,
+                  status: HTTP_STATUS.FORBIDDEN
+                })
+              }
+              //nếu truyền k đúng với database thì báo lỗi
+              if (user.verify !== UserVerifyStatus.Verified && user.email_verify_token !== value) {
+                throw new ErrorWithStatus({
+                  message: USERS_MESSAGES.EMAIL_VERIFY_TOKEN_NOT_MATCH,
+                  status: HTTP_STATUS.UNAUTHORIZED
+                })
+              }
+            } catch (err) {
+              //lỗi verify k thành công
+              if (err instanceof JsonWebTokenError) {
+                throw new ErrorWithStatus({
+                  message: capitalize((err as JsonWebTokenError).message),
+                  status: HTTP_STATUS.UNAUTHORIZED //401
+                })
+              }
+              // đây là ta throw lỗi mà ta bắt được từ việc k có trong database
+              throw err
+            }
+            return true
+          }
+        }
+      }
+    },
+    ['body']
+  )
+)
+
+export const forgotPasswordValidator = validate(
+  checkSchema(
+    {
+      email: {
+        isEmail: {
+          errorMessage: USERS_MESSAGES.EMAIL_IS_INVALID
+        },
+        trim: true,
+        custom: {
+          options: async (value, { req }) => {
+            //tìm trong database xem có user nào sở hữu email = value của email người dùng gữi lên không
+            const user = await databaseService.users.findOne({
+              email: value
+            })
+            //nếu không tìm đc user thì nói user không tồn tại
+            //khỏi tiến vào controller nữa
+            if (user === null) {
+              throw new ErrorWithStatus({
+                message: USERS_MESSAGES.USER_NOT_FOUND,
+                status: HTTP_STATUS.NOT_FOUND
+              })
+            }
+            //đến đâu thì oke
+            req.user = user // lưu user mới tìm đc lại luôn, khi nào cần thì xài
+            return true
+          }
+        }
+      }
+    },
+    ['body']
+  )
+)
+
+export const verifyForgotPasswordTokenValidator = validate(
+  checkSchema(
+    {
+      forgot_password_token: {
+        trim: true,
+        custom: {
+          options: async (value, { req }) => {
+            //nếu k truyền lên email_verify_token thì báo lỗi
+            if (!value) {
+              throw new ErrorWithStatus({
+                message: USERS_MESSAGES.FORGOT_PASSWORD_TOKEN_IS_REQUIRED,
+                status: HTTP_STATUS.UNAUTHORIZED
+              })
+            }
+            try {
+              //verify forgot_password_token để lấy decode
+              const decoded_forgot_password_token = await verifyToken({
+                token: value,
+                secretOnPublicKey: process.env.JWT_SECRET_FORGOT_PASSWORD_TOKEN as string
+              })
+              //lưu decoded_email_verify_token vào req
+              ;(req as Request).decoded_forgot_password_token = decoded_forgot_password_token
+              //láy user_id từ decoded_forgot_password_token để tìm user sở hữu
+              const user_id = decoded_forgot_password_token.user_id
+              const user = await databaseService.users.findOne({
+                _id: new ObjectId(user_id)
+              })
+              //nếu mà k có thì báo lỗi
+              if (!user) {
+                throw new ErrorWithStatus({
+                  message: USERS_MESSAGES.USER_NOT_FOUND,
+                  status: HTTP_STATUS.NOT_FOUND
+                })
+              }
+              req.user = user
+
+              //nếu truyền k đúng với database thì báo lỗi
+              if (user.forgot_password_token !== value) {
+                throw new ErrorWithStatus({
+                  message: USERS_MESSAGES.FORGOT_PASSWORD_TOKEN_NOT_MATCH,
+                  status: HTTP_STATUS.UNAUTHORIZED
+                })
+              }
             } catch (err) {
               //lỗi verify k thành công
               if (err instanceof JsonWebTokenError) {
