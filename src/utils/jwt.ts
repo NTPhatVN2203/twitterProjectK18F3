@@ -1,6 +1,7 @@
 import jwt, { JwtPayload } from 'jsonwebtoken'
 import { config } from 'dotenv'
 import { TokenPayLoad } from '~/models/requests/User.requests'
+config()
 
 //làm hàm nhận vào payload, privateKey và options
 // từ đó ký tên
@@ -46,9 +47,14 @@ export const verifyToken = ({
   secretOnPublicKey?: string
 }) => {
   return new Promise<TokenPayLoad>((resolve, reject) => {
+    //method này sẽ verify token, nếu token hợp lệ thì nó sẽ trả về payload
+    //nếu token không hợp lệ thì nó sẽ throw error
+    //secretOrPublicKey dùng để verify token
+    //nếu token được tạo ra bằng secret|PublicKey thì ta dùng secret|PublicKey key để verify
+    //từ đó biết rằng access_token được tạo bởi chính server
     jwt.verify(token, secretOnPublicKey, (err, decoded) => {
       if (err) throw reject(err)
-      resolve(decoded as TokenPayLoad) //payload = decode
+      resolve(decoded as TokenPayLoad) //payload = decode // decoded là decoded payload
     })
   })
 }

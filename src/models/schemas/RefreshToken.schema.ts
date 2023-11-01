@@ -14,13 +14,14 @@ interface RefreshTokenType {
 
 export default class RefreshToken {
   _id?: ObjectId //khi client gửi lên thì không cần truyền _id
+  // có thuộc tính _id cũng được, nếu k có thi mongo tự tạo
   token: string
   created_at: Date
   user_id: ObjectId
   constructor({ _id, token, created_at, user_id }: RefreshTokenType) {
     this._id = _id
     this.token = token
-    this.created_at = created_at || new Date()
+    this.created_at = created_at || new Date() // k truyền vào thì sẽ tự tạo
     this.user_id = user_id
   }
 }

@@ -16,6 +16,8 @@ export const validate = (validation: RunnableValidationChains<ValidationChain>) 
     const entityError = new EntityError({ errors: {} })
     for (const key in errorObject) {
       //lấy msg của từng lỗi ra
+      //k dùng errorObject.key là bởi z đâu có thằng nào là thuộc tính
+      // key đâu mà chấm
       const { msg } = errorObject[key] //phân rã: đi qua từng thằng key
       // phân rã msg của từng key ra rồi lưu lại
       if (msg instanceof ErrorWithStatus && msg.status !== 422) {

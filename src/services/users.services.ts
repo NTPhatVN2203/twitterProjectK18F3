@@ -8,6 +8,8 @@ import { TokenType } from '~/constants/enums'
 import RefreshToken from '~/models/schemas/RefreshToken.schema'
 import { ObjectId } from 'mongodb'
 import { USERS_MESSAGES } from '~/models/message'
+import { config } from 'dotenv'
+config()
 
 //file này chứa các method để thực hiện trên collection users
 class UsersService {
@@ -52,10 +54,11 @@ class UsersService {
         password: hashPassword(payload.password)
       })
     )
-    const user_id = result.insertedId.toString()
+    const user_id = result.insertedId.toString() // lay ra user id
     const [access_token, refresh_token] = await this.signAccessTokenAndRefreshToken(user_id)
     // lưu refresh_token vào database
     await databaseService.refreshToken.insertOne(
+      //chỗ này dùng await là bởi vì insertOne trả ra 1 promise
       new RefreshToken({
         token: refresh_token,
         user_id: new ObjectId(user_id) //bởi vì user_id trong RefreshToken là objectID

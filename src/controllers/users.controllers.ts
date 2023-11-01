@@ -38,6 +38,6 @@ export const logoutController = async (req: Request<ParamsDictionary, any, Logou
   // lấy refresh_token từ req.body
   const { refresh_token } = req.body
   //và vào database xóa refresh_token này
-  const result = await usersService.logout(refresh_token)
+  const result = await usersService.logout(refresh_token) // hàm trả ra chuỗi logout thành công
   res.json(result)
 }

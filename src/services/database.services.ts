@@ -31,6 +31,8 @@ class DatabaseService {
     //ép máy tỉnh hiểu DB_USERS_COLLECTION là string
   }
 
+  //hàm tạo và lấy collection
+  //method này trả về 1 collection chứa các object RefreshToken
   get refreshToken(): Collection<RefreshToken> {
     return this.db.collection(process.env.DB_REFRESH_TOKENS_COLLECTION as string)
   }

@@ -25,3 +25,7 @@ export interface TokenPayLoad extends JwtPayload {
   user_id: string
   token_type: TokenType
 }
+// JwtPayLoad đang thiếu user_id và token_type
+//TokenPayLoad giúp chúng ta định dạng decoded_refresh_token và decoded_ authorization
+//có thêm user_id và token_type, bản chất của nó đang kế thừa JwtPayLoad nên đang có
+//thời gian hạn dùng và 1 số thuộc tính khác

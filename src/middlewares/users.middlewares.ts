@@ -16,6 +16,7 @@ import usersService from '~/services/users.services'
 import { hashPassword } from '~/utils/crypto'
 import { verifyToken } from '~/utils/jwt'
 import { validate } from '~/utils/validation'
+
 export const loginValidator = validate(
   checkSchema(
     {
@@ -202,10 +203,14 @@ export const accessTokenValidator = validate(
         trim: true,
         notEmpty: {
           errorMessage: USERS_MESSAGES.ACCESS_TOKEN_IS_REQUIRED
-        },
+        }, // kiểm tra xem client có gửi lên k
         custom: {
           options: async (value, { req }) => {
-            const access_token = value.split(' ')[1]
+            const access_token = value.split(' ')[1] //split để loại bỏ thằng bearer
+            // cấu trúc là
+            // header{
+            //    Authorization: 'Bearer <access_token>'
+            // }
             if (!access_token) {
               throw new ErrorWithStatus({
                 message: USERS_MESSAGES.ACCESS_TOKEN_IS_REQUIRED,
@@ -213,12 +218,16 @@ export const accessTokenValidator = validate(
               })
             }
             // nếu xuống được đây thì tức là access_token có rồi
-            // vần verify access_token và lấy payload ra lưu lại trong req
+            // cần verify access_token và lấy payload ra lưu lại trong req
             try {
+              //nếu verify thành công thì
+              //decoded_authorization sẽ là decoded payload
               const decoded_authorization = await verifyToken({ token: access_token })
               ;(req as Request).decoded_authorization = decoded_authorization
             } catch (err) {
               throw new ErrorWithStatus({
+                //(error as JsonWebTokenError).message sẽ cho chuỗi `accesstoken invalid`, không đẹp lắm
+                //ta sẽ viết hóa chữ đầu tiên bằng .capitalize() của lodash
                 message: capitalize((err as JsonWebTokenError).message),
                 status: HTTP_STATUS.UNAUTHORIZED
               })
@@ -242,28 +251,42 @@ export const refreshTokenValidator = validate(
         },
         custom: {
           options: async (value, { req }) => {
+            //nếu verify thành công refresh_token
+            //thì sẽ nhận dc decoded như sau
+            //{
+            //  user_id: '64e3c037241604ad6184726c',
+            //  token_type: 1,
+            //  iat: 1693883172,
+            //  exp: 1702523172
+            //}
+
             try {
               const [decoded_refresh_token, refresh_token] = await Promise.all([
-                verifyToken({ token: value }),
+                verifyToken({ token: value }), // trả ra decoded_refresh_token
                 databaseService.refreshToken.findOne({
-                  token: value
+                  // hàm findOne trả ra 1 promise || null nên phải dùng trong await
+                  // kiểm trả database có tồn
+                  token: value // tại refresh_token đó k
                 })
               ])
-
+              // lỗi k có refreshToken trên server
               if (refresh_token === null) {
                 throw new ErrorWithStatus({
+                  // lỗi này sẽ bị throw xuống catch
                   message: USERS_MESSAGES.USED_REFRESH_TOKEN_OR_NOT_EXIST,
-                  status: HTTP_STATUS.UNAUTHORIZED
+                  status: HTTP_STATUS.UNAUTHORIZED //401
                 })
               }
               ;(req as Request).decoded_refresh_token = decoded_refresh_token
             } catch (err) {
+              //lỗi verify k thành công
               if (err instanceof JsonWebTokenError) {
                 throw new ErrorWithStatus({
                   message: capitalize((err as JsonWebTokenError).message),
-                  status: HTTP_STATUS.UNAUTHORIZED
+                  status: HTTP_STATUS.UNAUTHORIZED //401
                 })
               }
+              // đây là ta throw lỗi mà ta bắt được từ việc k có trong database
               throw err
             }
             return true
