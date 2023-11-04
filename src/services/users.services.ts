@@ -59,6 +59,8 @@ class UsersService {
   }
 
   async register(payload: RegisterReqBody) {
+    // ở đây chúng ta nên tự tạo user_id thay vì để mongoDB tự tạo
+    //vì chúng ta cần user_id để ký email_verify_token
     const user_id = new ObjectId()
     const email_verify_token = await this.signEmailVerifyToken(user_id.toString())
     //register nhận vào 1 payload và payload được định nghĩa là RegisterReqBody
@@ -89,6 +91,8 @@ class UsersService {
     )
     //giả lập gửi mail
     console.log(email_verify_token)
+    // ở đây chúng ta k gửi email_verify_token là bởi vì
+    // nó sẽ được gửi vào email mà client đăng kí
     return { access_token, refresh_token }
   }
 
@@ -127,6 +131,7 @@ class UsersService {
         _id: new ObjectId(user_id)
       },
       [
+        // mảng bọc object $set là giúp chúng ta có thể dùng $$NOW
         {
           $set: {
             verify: UserVerifyStatus.Verified,
@@ -145,6 +150,7 @@ class UsersService {
         user_id: new ObjectId(user_id)
       })
     )
+    //return access và refresh cho client đăng nhập luôn khi verify email thành công
     return { access_token, refresh_token }
   }
 
@@ -188,7 +194,7 @@ class UsersService {
       ]
     )
 
-    console.log(forgot_password_token)
+    console.log(forgot_password_token) //giả lập gửi mail
     return { message: USERS_MESSAGES.CHECK_EMAIL_TO_RESET_PASSWORD }
   }
 }

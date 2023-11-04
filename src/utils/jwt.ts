@@ -23,7 +23,7 @@ export const signToken = ({
 }: {
   payload: string | object | Buffer
   privateKey: string
-  options?: jwt.SignOptions
+  options?: jwt.SignOptions // có thể là 1 loại để hash code hoặc là hạn dùng,...
 }) => {
   //sau khi kí tên sẽ tạo ra token
   //mà token là string

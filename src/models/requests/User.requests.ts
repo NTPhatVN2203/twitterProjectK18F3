@@ -20,6 +20,14 @@ export interface LoginReqBody {
 export interface LogoutReqBody {
   refresh_token: string
 }
+export interface VerifyEmailReqBody {
+  //này là mình tự thêm
+  email_verify_token: string
+}
+export interface ForgotPasswordReqBody {
+  //tự thêm
+  email: string
+}
 
 export interface TokenPayLoad extends JwtPayload {
   user_id: string

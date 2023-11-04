@@ -301,6 +301,7 @@ export const emailVerifyTokenValidator = validate(
   checkSchema(
     {
       email_verify_token: {
+        // trong body sẽ truyền lên email_verify_token
         trim: true,
         custom: {
           options: async (value, { req }) => {
@@ -340,6 +341,7 @@ export const emailVerifyTokenValidator = validate(
                 })
               }
               //nếu truyền k đúng với database thì báo lỗi
+              // tức là verify đang là Unverified tuy nhiên giá trị thì bị sai
               if (user.verify !== UserVerifyStatus.Verified && user.email_verify_token !== value) {
                 throw new ErrorWithStatus({
                   message: USERS_MESSAGES.EMAIL_VERIFY_TOKEN_NOT_MATCH,
@@ -354,7 +356,7 @@ export const emailVerifyTokenValidator = validate(
                   status: HTTP_STATUS.UNAUTHORIZED //401
                 })
               }
-              // đây là ta throw lỗi mà ta bắt được từ việc k có trong database
+              // đây là ta throw lỗi mà ta bắt được từ việc check token(lỗi ta chế)
               throw err
             }
             return true
