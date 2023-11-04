@@ -10,6 +10,8 @@ import { ObjectId } from 'mongodb'
 import { USERS_MESSAGES } from '~/models/message'
 import { config } from 'dotenv'
 import { log } from 'console'
+import { ErrorWithStatus } from '~/models/Errors'
+import HTTP_STATUS from '~/constants/httpStatus'
 config()
 
 //file này chứa các method để thực hiện trên collection users
@@ -197,7 +199,49 @@ class UsersService {
     console.log(forgot_password_token) //giả lập gửi mail
     return { message: USERS_MESSAGES.CHECK_EMAIL_TO_RESET_PASSWORD }
   }
+  async resetPassword({ user_id, password }: { user_id: string; password: string }) {
+    //dựa vào user_id tìm và cập nhật
+    await databaseService.users.updateOne(
+      {
+        _id: new ObjectId(user_id)
+      },
+      [
+        {
+          $set: {
+            password: hashPassword(password),
+            forgot_password_token: '',
+            updated_at: '$$NOW'
+          }
+        }
+      ]
+    )
+    return { message: USERS_MESSAGES.RESET_PASSWORD_SUCCESS }
+  }
+
+  async getMe(user_id: string) {
+    const user = await databaseService.users.findOne(
+      {
+        _id: new ObjectId(user_id)
+      },
+      {
+        projection: {
+          password: 0,
+          email_verify_token: 0,
+          forgot_password_token: 0
+        }
+      }
+    )
+    if (!user) {
+      throw new ErrorWithStatus({
+        message: USERS_MESSAGES.USER_NOT_FOUND,
+        status: HTTP_STATUS.NOT_FOUND
+      })
+    }
+
+    return user
+  }
 }
+
 const usersService = new UsersService()
 //tạo usersService có chứa đầy đủ các method để tương tác với dữ liệu của users
 export default usersService
