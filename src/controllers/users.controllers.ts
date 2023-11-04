@@ -8,11 +8,13 @@ import {
   LogoutReqBody,
   RegisterReqBody,
   ResetPasswordReqBody,
-  TokenPayLoad
+  TokenPayLoad,
+  UpdateMeReqBody,
+  getProfileReqParams
 } from '~/models/requests/User.requests'
 import { ObjectId } from 'mongodb'
 import { USERS_MESSAGES } from '~/models/message'
-import { UserVerifyStatus } from '~/constants/enums'
+import { TokenType, UserVerifyStatus } from '~/constants/enums'
 import { ErrorWithStatus } from '~/models/Errors'
 import HTTP_STATUS from '~/constants/httpStatus'
 
@@ -21,7 +23,10 @@ export const loginController = async (req: Request<ParamsDictionary, any, LoginR
   const user = req.user as User
   const user_id = user._id as ObjectId //nó là objectID
   //server phải tạo ra access và refresh token để đưa cho client
-  const result = await usersService.login(user_id.toString())
+  const result = await usersService.login({
+    user_id: user_id.toString(),
+    verify: user.verify
+  })
   //hàm login nhận vào userID và trả về 1 access và refresh token
   return res.json({
     message: USERS_MESSAGES.LOGIN_SUCCESS,
@@ -101,9 +106,12 @@ export const resendEmailVerifyController = async (req: Request, res: Response) =
 
 export const forgotPasswordController = async (req: Request, res: Response) => {
   // lấy user_id từ req.user
-  const { _id } = req.user as User // _id là objectId
+  const { _id, verify } = req.user as User // _id là objectId
   //tiến hành update lại forgot_password_token
-  const result = await usersService.forgotPassword((_id as ObjectId).toString())
+  const result = await usersService.forgotPassword({
+    user_id: (_id as ObjectId).toString(),
+    verify
+  })
   return res.json(result)
 }
 
@@ -132,6 +140,30 @@ export const getMeController = async (req: Request, res: Response) => {
   const user = await usersService.getMe(user_id)
   return res.json({
     message: USERS_MESSAGES.GET_ME_SUCCESS,
+    result: user
+  })
+}
+
+export const updateMeController = async (req: Request<ParamsDictionary, any, UpdateMeReqBody>, res: Response) => {
+  //muốn update thông tin của user thì cần user_id và những thông tin
+  //ngta muốn update
+  const { user_id } = req.decoded_authorization as TokenPayLoad
+  const { body } = req
+  //giờ mình sẽ update user thông qua user_id này với body được cho
+  const result = await usersService.updateMe(user_id, body)
+  return res.json({
+    message: USERS_MESSAGES.UPDATE_ME_SUCCESS,
+    result
+  })
+}
+
+export const getProfileController = async (req: Request<getProfileReqParams>, res: Response) => {
+  //muốn lấy thông tin của user thì chỉ cần lấy username
+  const { username } = req.params
+  //tiến hành vào database tìm và lấy thông tin user
+  const user = await usersService.getProfile(username)
+  return res.json({
+    message: USERS_MESSAGES.GET_PROFILE_SUCCESS,
     result: user
   })
 }
