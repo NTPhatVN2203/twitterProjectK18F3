@@ -498,10 +498,12 @@ export const verifiedUserValidator = (req: Request, res: Response, next: NextFun
   //kiểm tra user đã verify hay chưa ?
   const { verify } = req.decoded_authorization as TokenPayLoad
   if (verify !== UserVerifyStatus.Verified) {
-    throw new ErrorWithStatus({
-      message: USERS_MESSAGES.USER_NOT_VERIFIED,
-      status: HTTP_STATUS.FORBIDDEN //403
-    })
+    return next(
+      new ErrorWithStatus({
+        message: USERS_MESSAGES.USER_NOT_VERIFIED,
+        status: HTTP_STATUS.FORBIDDEN //403
+      })
+    )
   }
   next()
 }
@@ -580,6 +582,40 @@ export const updateMeValidator = validate(
       },
       avatar: imageSchema,
       cover_photo: imageSchema
+    },
+    ['body']
+  )
+)
+
+export const followValidator = validate(
+  checkSchema(
+    {
+      followed_user_id: {
+        custom: {
+          options: async (value: string, { req }) => {
+            //check xem id có thuộc dạng objectId hay không
+            if (!ObjectId.isValid(value)) {
+              throw new ErrorWithStatus({
+                message: USERS_MESSAGES.INVALID_FOLLOWED_USER_ID,
+                status: HTTP_STATUS.NOT_FOUND
+              })
+            }
+            //vào database tìm xem user đó có không
+            const followed_user = await databaseService.users.findOne({
+              _id: new ObjectId(value)
+            })
+            if (followed_user === null) {
+              throw new ErrorWithStatus({
+                message: USERS_MESSAGES.FOLLOWED_USER_NOT_FOUND,
+                status: HTTP_STATUS.NOT_FOUND
+              })
+            }
+
+            //vượt qua hết thì return
+            return true
+          }
+        }
+      }
     },
     ['body']
   )

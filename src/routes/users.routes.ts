@@ -3,6 +3,7 @@ import { Router } from 'express'
 import { wrap } from 'module'
 import {
   emailVerifyController,
+  followController,
   forgotPasswordController,
   getMeController,
   getProfileController,
@@ -18,6 +19,7 @@ import { filterMiddleware } from '~/middlewares/common.middlewares'
 import {
   accessTokenValidator,
   emailVerifyTokenValidator,
+  followValidator,
   forgotPasswordValidator,
   loginValidator,
   refreshTokenValidator,
@@ -42,7 +44,27 @@ const usersRouter = Router()
 //    tăng tính bảo mật
 
 usersRouter.post('/login', loginValidator, wrapAsync(loginController))
+
+/*
+Description: Register new user
+Path: /register
+Method: POST
+body: {
+    name: string
+    email: string
+    password: string
+    confirm_password: string
+    date_of_birth: string theo chuẩn ISO 8601
+}
+*/
 usersRouter.post('/register', registerValidator, wrapAsync(registerController))
+/*
+  des: lougout
+  path: /users/logout
+  method: POST
+  Header: {Authorization: Bearer <access_token>}
+  body: {refresh_token: string}
+  */
 usersRouter.post('/logout', accessTokenValidator, refreshTokenValidator, wrapAsync(logoutController))
 
 /*
@@ -109,6 +131,7 @@ Header: {Authorization: Bearer <access_token>}
 body: {}
 */
 usersRouter.get('/me', accessTokenValidator, wrapAsync(getMeController))
+
 usersRouter.patch(
   '/me',
   accessTokenValidator,
@@ -136,25 +159,13 @@ không cần header vì, chưa đăng nhập cũng có thể xem
 usersRouter.get('/:username', wrapAsync(getProfileController))
 //chưa có controller getProfileController, nên bây giờ ta làm
 
-export default usersRouter
-
 /*
-Description: Register new user
-Path: /register
-Method: POST
-body: {
-    name: string
-    email: string
-    password: string
-    confirm_password: string
-    date_of_birth: string theo chuẩn ISO 8601
-}
+des: Follow someone
+path: '/follow'
+method: post
+headers: {Authorization: Bearer <access_token>}
+body: {followed_user_id: string}
 */
+usersRouter.post('/follow', accessTokenValidator, verifiedUserValidator, followValidator, wrapAsync(followController))
 
-/*
-  des: lougout
-  path: /users/logout
-  method: POST
-  Header: {Authorization: Bearer <access_token>}
-  body: {refresh_token: string}
-  */
+export default usersRouter

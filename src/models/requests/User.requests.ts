@@ -35,6 +35,10 @@ export interface ResetPasswordReqBody {
   confirm_password: string
 }
 
+export interface FollowReqBody {
+  followed_user_id: string
+}
+
 export interface TokenPayLoad extends JwtPayload {
   user_id: string
   token_type: TokenType
