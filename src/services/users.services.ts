@@ -337,6 +337,30 @@ class UsersService {
       message: USERS_MESSAGES.FOLLOW_SUCCESSFULLY
     }
   }
+
+  async unfollow({ user_id, followed_user_id }: { user_id: string; followed_user_id: string }) {
+    // tìm xem có đang ở trạng thái followed k
+    const isFollowed = await databaseService.followers.findOne({
+      user_id: new ObjectId(user_id),
+      followed_user_id: new ObjectId(followed_user_id)
+    })
+    // nếu chưa followed thì báo là chưa
+    if (isFollowed == null) {
+      return {
+        message: USERS_MESSAGES.ALREADY_UNFOLLOWED
+      }
+    }
+    //xuống dc đây thì là đã followed rồi
+    //chúng ta sẽ xóa document đó trong collection
+    const result = await databaseService.followers.deleteOne({
+      user_id: new ObjectId(user_id),
+      followed_user_id: new ObjectId(followed_user_id)
+    })
+    //nếu xóa thành công thì return message
+    return {
+      message: USERS_MESSAGES.UNFOLLOW_SUCCESSFULLY
+    }
+  }
 }
 
 const usersService = new UsersService()
