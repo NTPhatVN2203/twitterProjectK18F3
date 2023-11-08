@@ -361,6 +361,29 @@ class UsersService {
       message: USERS_MESSAGES.UNFOLLOW_SUCCESSFULLY
     }
   }
+
+  async changePassword({ user_id, password }: { user_id: string; password: string }) {
+    //tìm user và cập nhật lại password và forgetpassword
+    await databaseService.users.updateOne(
+      {
+        _id: new ObjectId(user_id)
+      },
+      [
+        {
+          $set: {
+            password: hashPassword(password),
+            forgot_password_token: '',
+            updated_at: '$$NOW'
+          }
+        }
+      ]
+    )
+    //nếu bạn muốn ngta đổi mk xong tự động đăng nhập luôn thì trả về access_token và refresh_token
+    //ở đây mình chỉ cho ngta đổi mk thôi, nên trả về message
+    return {
+      message: USERS_MESSAGES.CHANGE_PASSWORD_SUCCESS // trong message.ts thêm CHANGE_PASSWORD_SUCCESS: 'Change password success'
+    }
+  }
 }
 
 const usersService = new UsersService()
