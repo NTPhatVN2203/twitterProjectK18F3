@@ -51,10 +51,13 @@ export interface UpdateMeReqBody {
 }
 //vì đây là route patch nên ngta truyền thiếu 1 trong các prop trên cũng k sao
 
-export interface changePasswordReqBody {
+export interface ChangePasswordReqBody {
   old_password: string
   password: string
   confirm_password: string
+}
+export interface RefreshTokenReqBody {
+  refresh_token: string
 }
 
 export interface TokenPayLoad extends JwtPayload {

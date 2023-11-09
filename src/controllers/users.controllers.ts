@@ -4,15 +4,16 @@ import databaseService from '~/services/database.services'
 import usersService from '~/services/users.services'
 import { ParamsDictionary } from 'express-serve-static-core'
 import {
+  ChangePasswordReqBody,
   FollowReqBody,
   LoginReqBody,
   LogoutReqBody,
+  RefreshTokenReqBody,
   RegisterReqBody,
   ResetPasswordReqBody,
   TokenPayLoad,
   UnfollowReqParams,
   UpdateMeReqBody,
-  changePasswordReqBody,
   getProfileReqParams
 } from '~/models/requests/User.requests'
 import { ObjectId } from 'mongodb'
@@ -20,6 +21,8 @@ import { USERS_MESSAGES } from '~/models/message'
 import { TokenType, UserVerifyStatus } from '~/constants/enums'
 import { ErrorWithStatus } from '~/models/Errors'
 import HTTP_STATUS from '~/constants/httpStatus'
+import { access } from 'fs'
+import { verify } from 'crypto'
 
 export const loginController = async (req: Request<ParamsDictionary, any, LoginReqBody>, res: Response) => {
   //nếu nó vào tới đây, tức là nó đã đăng nhập thành công
@@ -192,7 +195,7 @@ export const unfollowController = async (req: Request<UnfollowReqParams>, res: R
 }
 
 export const changePasswordController = async (
-  req: Request<ParamsDictionary, any, changePasswordReqBody>,
+  req: Request<ParamsDictionary, any, ChangePasswordReqBody>,
   res: Response,
   next: NextFunction
 ) => {
@@ -200,4 +203,26 @@ export const changePasswordController = async (
   const { password } = req.body
   const result = await usersService.changePassword({ user_id, password })
   return res.json(result)
+}
+
+export const refreshTokenController = async (
+  req: Request<ParamsDictionary, any, RefreshTokenReqBody>,
+  res: Response,
+  next: NextFunction
+) => {
+  const { refresh_token } = req.body
+  const { user_id, verify } = req.decoded_refresh_token as TokenPayLoad
+  const result = await usersService.refreshToken({ refresh_token, user_id, verify })
+  return res.json({
+    message: USERS_MESSAGES.REFRESH_TOKEN_SUCCESSFULLY,
+    result
+  })
+}
+
+export const oAuthController = async (req: Request, res: Response, next: NextFunction) => {
+  const { code } = req.query //lấy code từ query params
+  const { access_token, refresh_token, new_user } = await usersService.oAuth(code as string)
+  //tạo đường dẫn truyền thông tin result để sau khi họ chọn tại khoản, ta check (tạo | login) xong thì điều hướng về lại client kèm thông tin at và rf
+  const urlRedirect = `${process.env.CLIENT_REDIRECT_CALLBACK}?access_token=${access_token}&refresh_token=${refresh_token}&new_user=${new_user}&verify=${verify}`
+  return res.redirect(urlRedirect)
 }
