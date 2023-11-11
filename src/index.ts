@@ -3,9 +3,16 @@ import usersRouter from './routes/users.routes'
 import databaseService from './services/database.services'
 import { defaultErrorHandler } from './middlewares/error.middlewares'
 import mediasRouter from './routes/medias.routes'
+import { initFolder } from './utils/file'
+import { config } from 'dotenv'
+import { UPLOAD_DIR } from './constants/dir'
+import staticRouter from './routes/static.routes'
+config()
+
 const app = express()
 app.use(express.json())
-const PORT = 4000
+const PORT = process.env.PORT || 4000
+initFolder()
 databaseService.connect()
 
 app.get('/', (req, res) => {
@@ -15,6 +22,12 @@ app.get('/', (req, res) => {
 app.use('/users', usersRouter)
 //localhost:3000/users/tweets
 app.use('/medias', mediasRouter)
+
+// app.use(express.static(UPLOAD_DIR)) //static file handler
+//nếu viết như vậy thì link dẫn sẽ là localhost:4000/blablabla.jpg
+//app.use('/static', express.static(UPLOAD_DIR)) //nếu muốn thêm tiền tố, ta sẽ làm thế này
+//vậy thì nghĩa là vào localhost:4000/static/blablabla.jpg
+app.use('/static', staticRouter)
 
 app.use(defaultErrorHandler)
 
