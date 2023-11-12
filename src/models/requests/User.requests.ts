@@ -64,6 +64,8 @@ export interface TokenPayLoad extends JwtPayload {
   user_id: string
   token_type: TokenType
   verify: UserVerifyStatus
+  exp: number
+  iat: number
 }
 // JwtPayLoad đang thiếu user_id và token_type
 //TokenPayLoad giúp chúng ta định dạng decoded_refresh_token và decoded_ authorization
