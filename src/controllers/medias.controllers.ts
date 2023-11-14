@@ -22,6 +22,7 @@ export const uploadVideoController = async (req: Request, res: Response) => {
   return res.json({
     message: USERS_MESSAGES.UPLOAD_SUCCESSFULLY,
     result: url
+    // 1 mảng chỉ chứa 1 object
   })
 }
 
@@ -58,6 +59,7 @@ export const serveVideoStreamController = (req: Request, res: Response) => {
   console.log('start: ', start)
 
   //lấy giá trị byte kết thúc-tức là khúc cần load đến
+  //tránh trường hợp end lại dài hơn size
   const end = Math.min(start + CHUNK_SIZE, videoSize - 1) //nếu (start + CHUNK_SIZE) > videoSize thì lấy videoSize
   //dung lượng sẽ load thực tế
   const contentLength = end - start + 1 //thường thì nó luôn bằng CHUNK_SIZE, nhưng nếu là phần cuối thì sẽ nhỏ hơn

@@ -24,6 +24,7 @@ export const getNameFromFullname = (filename: string) => {
   return nameArr.join('') //nối lại thành chuỗi
 }
 
+//hàm lấy đuôi mở rộng của file
 export const getExtension = (filename: string) => {
   const nameArr = filename.split('.') // [videoNgocTrinhTeXe, ducati, paginale, mp4]
   return nameArr[nameArr.length - 1]
@@ -62,15 +63,18 @@ export const handleUploadImage = async (req: Request) => {
 
 export const handleUploadVideo = async (req: Request) => {
   const form = formidable({
-    uploadDir: path.resolve(UPLOAD_VIDEO_DIR),
+    uploadDir: path.resolve(UPLOAD_VIDEO_DIR), //vì video nên mình không đi qua bước xử lý
+    // trung gian nên mình sẽ k bỏ video vào temp
     maxFiles: 1,
-    // keepExtensions: true, //giữ lại đuôi mở rộng của file
+    // keepExtensions: true,  //có lấy đuôi mở rộng không .png, .jpg "nếu file có dạng asdasd.app.mp4 thì lỗi, nên mình sẽ xử lý riêng
     maxFileSize: 50 * 1024 * 1024, //50mb
-    //xài option filter để kiểm tra file có phải là image không
+    //xài option filter để kiểm tra file có phải là video không
     filter: function ({ name, originalFilename, mimetype }) {
       const valid = name === 'video' && Boolean(mimetype?.includes('video/'))
+      //nếu sai valid thì dùng form.emit để gữi lỗi
       if (!valid) {
         form.emit('error' as any, new Error('file khong hop le') as any)
+        //as any vì bug này formidable chưa fix, khi nào hết thì bỏ as any
       }
       return valid
     }
@@ -89,6 +93,7 @@ export const handleUploadVideo = async (req: Request) => {
       videos.forEach((video) => {
         const ext = getExtension(video.originalFilename as string) //lấy đuôi của tên gốc
         video.newFilename += `.${ext}` //lắp đuôi vào tên mới
+        //fs.renameSync(video.filepath, video.filepath + '.' + ext) //rename lại đường dẫn tên file để thêm đuôi
         fs.renameSync(video.filepath, `${video.filepath}.${ext}`) //lắp đuôi vào filepath: đường dẫn đến file mới
       })
       return resolve(files.video as File[])

@@ -41,8 +41,14 @@ class MediasService {
     const files = await handleUploadVideo(req)
 
     const result: Media[] = await Promise.all(
+      //array map method -> Array.map(function) || Array.map(()=> {})
+      // xử lý every array element from calling a function(|| callback function)
+      // và tạo ra 1 new array
       files.map(async (file) => {
-        const { newFilename } = file
+        const { newFilename } = file //mảng files này chứa các file element, nó chính là video
+        //tạo ra 1 array mới chứa các file object
+        //mỗi object sẽ là những gì chúng ta return
+        //array mới đó là result
         return {
           url: isProduction
             ? `${process.env.HOST}/static/video/${newFilename}`
@@ -52,6 +58,9 @@ class MediasService {
       })
     )
     return result
+    //result này là 1 array mới sau khi chúng ta map() nó, tuy nhiên
+    //chúng ta đã giới hạn req chỉ nhận vào 1 video
+    //nên result này chỉ chứa 1 video
   }
 }
 

@@ -42,12 +42,14 @@ class UsersService {
   // hàm nhận vào user_id và bỏ vào payload để tạo refresh_token
   private signRefreshToken({ user_id, verify, exp }: { user_id: string; verify: UserVerifyStatus; exp?: number }) {
     if (exp) {
+      //nếu có thì truyền vào
       return signToken({
         payload: { user_id, token_type: TokenType.RefreshToken, verify, exp },
         privateKey: process.env.JWT_SECRET_REFRESH_TOKEN as string
       })
     } else {
       return signToken({
+        //nếu không thì thêm options expiresIn: số ngày hết hạn
         payload: { user_id, token_type: TokenType.RefreshToken, verify },
         privateKey: process.env.JWT_SECRET_REFRESH_TOKEN as string,
         options: { expiresIn: process.env.REFRESH_TOKEN_EXPIRE_IN }
@@ -120,7 +122,8 @@ class UsersService {
     )
     //giả lập gửi mail
     console.log(email_verify_token)
-    // ở đây chúng ta k gửi email_verify_token là bởi vì
+
+    // ở đây chúng ta k return email_verify_token là bởi vì
     // nó sẽ được gửi vào email mà client đăng kí
     return { access_token, refresh_token }
   }
@@ -437,7 +440,7 @@ class UsersService {
         user_id: new ObjectId(user_id),
         token: new_refresh_token,
         iat,
-        exp
+        exp //ngày hết hạn cũ khi ta refresh 1 token
       })
     )
     return {
